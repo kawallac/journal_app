@@ -1,0 +1,256 @@
+:root {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #e5e5e5;
+  color: #222;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header */
+header {
+  padding: 0.75rem 1.25rem;
+  background: #222;
+  color: #fefefe;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+header h1 {
+  font-size: 1.1rem;
+  margin: 0;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+header .sub {
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+/* Layout container */
+.app-container {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+  height: 100%;
+}
+
+/* Sidebar */
+.sidebar {
+  flex: 0 0 10vw;            /* about 10% of viewport width */
+  min-width: 120px;
+  background: #f0f0f0;
+  border-right: 2px solid #ff0000;  /* bright red so you can't miss it */
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+.sidebar-title {
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-bottom: 0.25rem;
+}
+
+.sidebar-subtitle {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+/* Main editor area */
+.editor {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.editor-toolbar {
+  padding: 0.75rem 1.25rem;
+  border-bottom: 1px solid #d4d4d4;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+/* Centered page wrapper */
+.page-wrapper {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 1.5rem 1rem;
+  overflow-y: auto;
+}
+
+/* Simulated journal page */
+.page {
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.12),
+    0 0 0 1px rgba(0, 0, 0, 0.03);
+
+  width: 100%;        /* allow it to stretch */
+  max-width: 1100px;   /* increase from 800px to 1100px */
+  min-height: 70vh;
+
+  padding: 1.5rem 1.75rem;
+  box-sizing: border-box;
+}
+
+
+.editor-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  height: 100%;
+}
+
+/* Form layout */
+.editor-row {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #444;
+}
+
+input[type="date"],
+input[type="text"] {
+  border-radius: 0.35rem;
+  border: 1px solid #ccc;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.9rem;
+  min-width: 0;
+}
+
+input[type="text"] {
+  flex: 1;
+}
+
+textarea {
+  flex: 1;
+  border-radius: 0.5rem;
+  border: 1px solid #ccc;
+  padding: 0.6rem;
+  font-size: 0.95rem;
+  resize: none;
+  font-family: inherit;
+  line-height: 1.5;
+  min-height: 350px;
+}
+
+/* Actions row */
+.editor-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.editor-actions-left,
+.editor-actions-right {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.status-text {
+  font-size: 0.75rem;
+  color: #777;
+}
+
+/* Buttons */
+button {
+  border-radius: 999px;
+  border: 1px solid #ccc;
+  padding: 0.4rem 0.8rem;
+  background: #fff;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background 0.15s, box-shadow 0.15s, transform 0.05s;
+}
+
+button.primary {
+  border-color: #2563eb;
+  background: #2563eb;
+  color: #fff;
+}
+
+button.danger {
+  border-color: #dc2626;
+  color: #dc2626;
+  background: #fff;
+}
+
+button:hover {
+  background: #f3f3f3;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+}
+
+button.primary:hover {
+  background: #1d4ed8;
+}
+
+button:active {
+  transform: translateY(1px);
+  box-shadow: none;
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: default;
+  box-shadow: none;
+}
+
+/* Image (photo of journal page) section */
+.image-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+}
+
+.image-preview {
+  margin-top: 0.25rem;
+  padding: 0.5rem;
+  border-radius: 6px;
+  border: 1px dashed #ccc;
+  background: #fafafa;
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.image-preview span {
+  font-size: 0.8rem;
+  color: #777;
+}
+
+/* Make the journal page image large and readable */
+.image-preview img {
+  width: 100%;               /* EXACT width of your text-entry area */
+  height: auto;              /* auto-scale the height properly */
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  display: block;            /* removes inline whitespace */
+}
