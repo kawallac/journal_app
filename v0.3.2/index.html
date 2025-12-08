@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Journal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Journal</h1>
+      <div class="sub">Simple, private, browser-based journaling</div>
+    </div>
+  </header>
+
+  <div class="app-container">
+    <!-- Left sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-title">Sidebar</div>
+      <div class="sidebar-subtitle">Navigation area (placeholder)</div>
+    </aside>
+
+    <!-- Main area -->
+    <main class="editor">
+      <div class="editor-toolbar">
+        <button id="new-entry-btn" class="primary">New Entry</button>
+        <button id="new-tag-btn">New Tag</button>
+      </div>
+
+      <div class="page-wrapper">
+        <div class="page">
+
+          <!-- Top bar inside the journal card -->
+          <div class="page-top-bar">
+            <div class="page-top-left-actions">
+              <button class="primary" id="save-btn">Save</button>
+              <button class="danger" id="delete-btn">Delete</button>
+            </div>
+            <div class="page-top-right-actions">
+              <button id="prev-btn">Prev</button>
+              <button id="next-btn">Next</button>
+            </div>
+          </div>
+
+          <div class="editor-inner" id="editor-inner">
+            <!-- JS will inject the entry form here -->
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
