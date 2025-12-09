@@ -15,8 +15,11 @@
   </header>
 
   <div class="app-container">
-    <!-- Left sidebar -->
+    <!-- =========================
+         Left Sidebar
+         ========================== -->
     <aside class="sidebar">
+      <!-- Search bar -->
       <div class="sidebar-search">
         <div class="sidebar-search-inner">
           <input
@@ -35,24 +38,30 @@
         </div>
       </div>
 
+      <!-- Button to go back to journal view -->
       <button id="journal-view-btn" class="sidebar-button">
         Journal View
       </button>
 
+      <!-- Placeholder text for future sidebar features -->
       <div class="sidebar-title">Sidebar</div>
       <div class="sidebar-subtitle">Navigation area (future features)</div>
     </aside>
 
-    <!-- Main area -->
+    <!-- =========================
+         Main Editor Area
+         ========================== -->
     <main class="editor">
+      <!-- Top toolbar for actions -->
       <div class="editor-toolbar">
         <button id="new-entry-btn" class="primary">New Entry</button>
         <button id="new-tag-btn">New Tag</button>
       </div>
 
+      <!-- Centered card area (journal or search results) -->
       <div class="page-wrapper">
         <div class="page">
-          <!-- Top bar inside the journal card -->
+          <!-- Top bar inside the journal/search card -->
           <div class="page-top-bar" id="page-top-bar">
             <div class="page-top-left-actions">
               <button class="primary" id="save-btn">Save</button>
@@ -64,14 +73,14 @@
             </div>
           </div>
 
-          <!-- Journal view (editor) -->
+          <!-- Journal view (entry editor) -->
           <div id="page-journal">
             <div class="editor-inner" id="editor-inner">
               <!-- JS injects entry form here -->
             </div>
           </div>
 
-          <!-- Search results view -->
+          <!-- Search results view (toggled by JS) -->
           <div id="page-search" class="page-search">
             <h2 class="page-search-title">Search Results</h2>
             <div id="search-results"></div>

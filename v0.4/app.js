@@ -1,9 +1,23 @@
+/* ============================================
+   JOURNAL APP – BASELINE v0.4
+   Date: 2025-12-08
+   Description:
+     - Pluggable storage adapter (localStorage)
+     - Journal entry editor with image & notes
+     - Draggable, editable tag pins on image
+     - Search over title, body, and tags
+     - Search results in main card
+     - Prev/Next navigation between entries
+   ============================================ */
+
 document.addEventListener("DOMContentLoaded", () => {
   const STORAGE_KEY = "journalEntries_v1";
 
-  // -----------------------------
+  // ============================================
   // Pluggable Storage Adapter
-  // -----------------------------
+  // (Swap here in future: IndexedDB or remote API)
+  // ============================================
+
   const StorageAdapter = {
     loadEntries() {
       try {
@@ -25,20 +39,23 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  // -----------------------------
+  // ============================================
   // App State
-  // -----------------------------
-  let entries = [];
-  let currentEntryId = null;
-  let lastSavedAt = null;
-  let currentTags = [];
+  // ============================================
+
+  let entries = [];            // All journal entries in memory
+  let currentEntryId = null;   // ID of currently loaded entry
+  let lastSavedAt = null;      // Date object of last save time
+  let currentTags = [];        // Tags for the current entry
+
+  // Existing tag drag state
   let draggingTagId = null;
 
-  // Dragging new tag from header
+  // New tag drag state (from New Tag button)
   let draggingNewTag = false;
   let ghostTagEl = null;
 
-  // Tag dialog state
+  // Tag dialog references / state
   let tagDialogOverlay = null;
   let tagDialogEl = null;
   let tagDialogTextInput = null;
@@ -49,30 +66,32 @@ document.addEventListener("DOMContentLoaded", () => {
   let tagDialogCurrentTag = null;
   let tagDialogCurrentTagEl = null;
 
-  // View state: "journal" or "search"
+  // View mode: "journal" or "search"
   let currentView = "journal";
   let currentSearchResults = [];
 
-  // -----------------------------
+  // ============================================
   // DOM References
-  // -----------------------------
-  const editorInnerEl = document.getElementById("editor-inner");
-  const newEntryBtn = document.getElementById("new-entry-btn");
-  const newTagBtn = document.getElementById("new-tag-btn");
-  const saveBtn = document.getElementById("save-btn");
-  const deleteBtnTop = document.getElementById("delete-btn");
-  const prevBtn = document.getElementById("prev-btn");
-  const nextBtn = document.getElementById("next-btn");
+  // ============================================
 
-  const pageTopBar = document.getElementById("page-top-bar");
-  const pageJournal = document.getElementById("page-journal");
-  const pageSearch = document.getElementById("page-search");
+  const editorInnerEl = document.getElementById("editor-inner");
+  const newEntryBtn   = document.getElementById("new-entry-btn");
+  const newTagBtn     = document.getElementById("new-tag-btn");
+  const saveBtn       = document.getElementById("save-btn");
+  const deleteBtnTop  = document.getElementById("delete-btn");
+  const prevBtn       = document.getElementById("prev-btn");
+  const nextBtn       = document.getElementById("next-btn");
+
+  const pageTopBar    = document.getElementById("page-top-bar");
+  const pageJournal   = document.getElementById("page-journal");
+  const pageSearch    = document.getElementById("page-search");
   const searchResultsEl = document.getElementById("search-results");
 
-  const searchInput = document.getElementById("search-input");
+  const searchInput   = document.getElementById("search-input");
   const searchClearBtn = document.getElementById("search-clear-btn");
   const journalViewBtn = document.getElementById("journal-view-btn");
 
+  // Tag color palette
   const TAG_COLORS = [
     "#2563eb", // blue
     "#16a34a", // green
@@ -83,9 +102,10 @@ document.addEventListener("DOMContentLoaded", () => {
   ];
   const DEFAULT_TAG_COLOR = TAG_COLORS[0];
 
-  // -----------------------------
-  // Utility
-  // -----------------------------
+  // ============================================
+  // Utility Helpers
+  // ============================================
+
   function formatDateForInput(date) {
     return date.toISOString().slice(0, 10);
   }
@@ -113,12 +133,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const idx = getCurrentEntryIndex();
     const hasEntries = entries.length > 0 && idx !== -1;
 
-    // Delete enabled only if an existing entry
+    // Delete button enabled only if an existing entry
     if (deleteBtnTop) {
       deleteBtnTop.disabled = !hasEntries;
     }
 
-    // Prev/Next at boundaries
+    // Prev/Next navigation limits
     if (prevBtn && nextBtn) {
       if (!hasEntries) {
         prevBtn.disabled = true;
@@ -130,9 +150,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // -----------------------------
-  // View Switching
-  // -----------------------------
+  // ============================================
+  // View Switching: Journal vs Search
+  // ============================================
+
   function showJournalView() {
     currentView = "journal";
     pageJournal.style.display = "block";
@@ -147,9 +168,10 @@ document.addEventListener("DOMContentLoaded", () => {
     pageTopBar.style.display = "none";
   }
 
-  // -----------------------------
+  // ============================================
   // Tag Dialog
-  // -----------------------------
+  // ============================================
+
   function setupTagDialog() {
     tagDialogOverlay = document.createElement("div");
     tagDialogOverlay.className = "tag-dialog-overlay";
@@ -177,7 +199,7 @@ document.addEventListener("DOMContentLoaded", () => {
     textField.appendChild(textLabel);
     textField.appendChild(tagDialogTextInput);
 
-    // Colors
+    // Color section
     const colorSection = document.createElement("div");
     colorSection.className = "tag-dialog-colors";
 
@@ -205,7 +227,7 @@ document.addEventListener("DOMContentLoaded", () => {
     colorSection.appendChild(colorLabel);
     colorSection.appendChild(swatchesContainer);
 
-    // Actions
+    // Actions (Cancel / Apply)
     const actions = document.createElement("div");
     actions.className = "tag-dialog-actions";
 
@@ -236,6 +258,7 @@ document.addEventListener("DOMContentLoaded", () => {
     tagDialogOverlay.appendChild(tagDialogEl);
     document.body.appendChild(tagDialogOverlay);
 
+    // Close when clicking on the dim background
     tagDialogOverlay.addEventListener("mousedown", (e) => {
       if (e.target === tagDialogOverlay) {
         closeTagDialog(false);
@@ -287,14 +310,15 @@ document.addEventListener("DOMContentLoaded", () => {
     tagDialogCurrentTagEl = null;
   }
 
-  // -----------------------------
-  // Tags rendering & dragging
-  // -----------------------------
+  // ============================================
+  // Tag Rendering & Dragging (Existing Tags)
+  // ============================================
+
   function renderTagsOverlay() {
     const previewEl = document.getElementById("image-preview");
     if (!previewEl) return;
 
-    // Remove existing tag elements
+    // Remove any existing tags from overlay
     previewEl.querySelectorAll(".tag-pin").forEach(el => el.remove());
 
     const img = previewEl.querySelector("img");
@@ -321,7 +345,7 @@ document.addEventListener("DOMContentLoaded", () => {
         startDraggingTag(tag.id);
       });
 
-      // Edit via dialog
+      // Double-click to edit tag via dialog
       tagEl.addEventListener("dblclick", (e) => {
         e.stopPropagation();
         openTagDialog(tag, tagEl);
@@ -345,6 +369,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const rect = previewEl.getBoundingClientRect();
     if (rect.width === 0 || rect.height === 0) return;
 
+    // Convert mouse position to percentage coordinates
     const relX = ((e.clientX - rect.left) / rect.width) * 100;
     const relY = ((e.clientY - rect.top) / rect.height) * 100;
 
@@ -370,9 +395,10 @@ document.addEventListener("DOMContentLoaded", () => {
     document.removeEventListener("mouseup", stopDraggingTag);
   }
 
-  // -----------------------------
-  // Dragging a new tag from header
-  // -----------------------------
+  // ============================================
+  // Dragging a New Tag from Header Button
+  // ============================================
+
   function startNewTagDrag(e) {
     const previewEl = document.getElementById("image-preview");
     if (!previewEl) {
@@ -453,10 +479,12 @@ document.addEventListener("DOMContentLoaded", () => {
     renderTagsOverlay();
   }
 
-  // -----------------------------
+  // ============================================
   // Editor Rendering
-  // -----------------------------
+  // ============================================
+
   function renderEditor(entry) {
+    // Clone tags into current state
     currentTags = Array.isArray(entry.tags)
       ? entry.tags.map(t => ({ ...t }))
       : [];
@@ -524,9 +552,10 @@ document.addEventListener("DOMContentLoaded", () => {
     renderTagsOverlay();
   }
 
-  // -----------------------------
-  // Navigation between entries
-  // -----------------------------
+  // ============================================
+  // Navigation Between Entries (Prev/Next)
+  // ============================================
+
   function goToEntryAtIndex(idx) {
     if (idx < 0 || idx >= entries.length) return;
     const entry = entries[idx];
@@ -549,9 +578,10 @@ document.addEventListener("DOMContentLoaded", () => {
     goToEntryAtIndex(idx + 1);
   }
 
-  // -----------------------------
-  // Entry operations
-  // -----------------------------
+  // ============================================
+  // Entry Operations: New, Save, Delete
+  // ============================================
+
   function newEntry() {
     currentEntryId = null;
     lastSavedAt = null;
@@ -589,6 +619,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const nowISO = now.toISOString();
 
     if (photoInput.files && photoInput.files[0]) {
+      // Read new image data if a file is selected
       const file = photoInput.files[0];
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -597,6 +628,7 @@ document.addEventListener("DOMContentLoaded", () => {
       };
       reader.readAsDataURL(file);
     } else {
+      // Keep existing image data if no new file selected
       finalizeSave(dateValue, titleValue, bodyValue, existingImageData, now, nowISO);
     }
   }
@@ -656,16 +688,18 @@ document.addEventListener("DOMContentLoaded", () => {
     goToEntryAtIndex(idx);
   }
 
-  // -----------------------------
-  // Search
-  // -----------------------------
+  // ============================================
+  // Search: title + body + tags
+  // ============================================
+
   function entryMatchesQuery(entry, q) {
     const query = q.toLowerCase();
     const inTitle = (entry.title || "").toLowerCase().includes(query);
-    const inBody = (entry.body || "").toLowerCase().includes(query);
-    const inTags =
+    const inBody  = (entry.body  || "").toLowerCase().includes(query);
+    const inTags  =
       Array.isArray(entry.tags) &&
       entry.tags.some(t => (t.text || "").toLowerCase().includes(query));
+
     return inTitle || inBody || inTags;
   }
 
@@ -767,15 +801,18 @@ document.addEventListener("DOMContentLoaded", () => {
     goToEntryAtIndex(idx);
   }
 
-  // -----------------------------
+  // ============================================
   // Init
-  // -----------------------------
+  // ============================================
+
   function init() {
-    // Load from storage via adapter
+    // Load entries from storage
     entries = StorageAdapter.loadEntries();
 
+    // Set up tag dialog (hidden by default)
     setupTagDialog();
 
+    // If there are entries, load the most recently updated; else start a new one
     if (entries.length === 0) {
       newEntry();
     } else {
@@ -788,13 +825,14 @@ document.addEventListener("DOMContentLoaded", () => {
       updateNavAndActionsUI();
     }
 
-    // Buttons
+    // --- Wire button events ---
+
     if (newEntryBtn) newEntryBtn.addEventListener("click", newEntry);
-    if (newTagBtn) newTagBtn.addEventListener("mousedown", startNewTagDrag);
-    if (saveBtn) saveBtn.addEventListener("click", saveCurrentEntry);
+    if (newTagBtn)   newTagBtn.addEventListener("mousedown", startNewTagDrag);
+    if (saveBtn)     saveBtn.addEventListener("click", saveCurrentEntry);
     if (deleteBtnTop) deleteBtnTop.addEventListener("click", deleteCurrentEntry);
-    if (prevBtn) prevBtn.addEventListener("click", goToPreviousEntry);
-    if (nextBtn) nextBtn.addEventListener("click", goToNextEntry);
+    if (prevBtn)     prevBtn.addEventListener("click", goToPreviousEntry);
+    if (nextBtn)     nextBtn.addEventListener("click", goToNextEntry);
 
     if (journalViewBtn) {
       journalViewBtn.addEventListener("click", () => {
@@ -802,8 +840,10 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
 
+    // --- Search behavior ---
+
     if (searchInput) {
-      // Enter key executes search and then clears the field
+      // Pressing Enter triggers search and then clears the field
       searchInput.addEventListener("keydown", (e) => {
         if (e.key === "Enter") {
           const query = searchInput.value;
@@ -814,9 +854,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (searchClearBtn) {
+      // Clear button resets the field; if in search view, also clear results
       searchClearBtn.addEventListener("click", () => {
         searchInput.value = "";
-        // If we're on search view, clear and show "Type..." message
         if (currentView === "search") {
           runSearch("");
         }

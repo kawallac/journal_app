@@ -1,16 +1,26 @@
 /* ============================================
+   JOURNAL APP – BASELINE v0.4
+   Date: 2025-12-08
+   Description:
+     - Left sidebar with search
+     - Journal card with image + tags
+     - Search results card
+     - Clean, minimal aesthetic
+   ============================================ */
+
+/* ============================================
    Global Base Styles
    ============================================ */
 
-/* Root font and background */
+/* Root font and global background */
 :root {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background: #e5e5e5;
   color: #222;
 }
 
-/* Body fills the viewport and uses column layout:
-   Header on top, app content below */
+/* Body fills the viewport vertically and stacks:
+   header on top, app content below */
 body {
   margin: 0;
   padding: 0;
@@ -48,13 +58,13 @@ header .sub {
    Main Layout: Sidebar + Editor
    ============================================ */
 
-/* Container holding sidebar + main editor */
+/* Container for sidebar and main editor */
 .app-container {
   flex: 1;
   display: flex;
   min-height: 0;
   height: 100%;
-  background: #ffffff;
+  background: #ffffff;  /* clean white main background */
 }
 
 /* ============================================
@@ -62,11 +72,10 @@ header .sub {
    ============================================ */
 
 .sidebar {
-  flex: 0 0 10vw;
-  min-width: 220px;
-  background: ##ffffff;
-  /* Debug border to see sidebar edge; remove if desired */
-  border-right: 2px solid #dddddd;
+  flex: 0 0 10vw;            /* target ~10% width */
+  min-width: 220px;          /* ensure it doesn't get too tiny */
+  background: #ffffff;       /* match main white for minimal look */
+  border-right: 1px solid #dddddd;  /* subtle grey divider */
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
@@ -80,8 +89,10 @@ header .sub {
   margin-bottom: 0.25rem;
 }
 
-/* Outer container: single rounded rectangle with border.
-   This is the only visible border for the search control. */
+/* Outer “pill” container:
+   - This is the ONLY visible border for search
+   - Input inside is borderless
+*/
 .sidebar-search-inner {
   display: flex;
   align-items: center;
@@ -92,29 +103,29 @@ header .sub {
   box-sizing: border-box;
 }
 
-/* Highlight outer border when search is focused */
+/* Highlight border when search field is focused */
 .sidebar-search-inner:focus-within {
   border-color: #2563eb;
   box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.2);
 }
 
-/* Actual search input inside the pill:
-   - no border
-   - no extra padding (padding is on the container)
-   - transparent bg (so only the outer pill shows)
+/* Actual search input:
+   - no border (inner box removed)
+   - padding from container, not input
 */
 .sidebar-search-inner input {
   flex: 1;
-  border: none !important; /* Global rule is overriding, so !important */
+  border: none !important;           /* force no inner border */
+  box-shadow: none !important;       /* remove any default inset shadow */
   outline: none;
   border-radius: 999px;
-  padding: 0;                  /* IMPORTANT: no inner padding to avoid 'double box' look */
+  padding: 0;
   font-size: 0.85rem;
   box-sizing: border-box;
   background: transparent;
 }
 
-/* "X" clear button inside the search field */
+/* "X" clear button inside search field */
 .search-clear-btn {
   border: none;
   background: transparent;
@@ -167,7 +178,7 @@ header .sub {
   min-width: 0;
 }
 
-/* Toolbar at top of editor (New Entry / New Tag) */
+/* Toolbar above the journal card (New Entry / New Tag) */
 .editor-toolbar {
   padding: 0.75rem 1.25rem;
   border-bottom: 1px solid #d4d4d4;
@@ -177,7 +188,7 @@ header .sub {
   gap: 0.75rem;
 }
 
-/* Wrapper for page card, centered with scrollable content */
+/* Wrapper for the central card (journal or search results) */
 .page-wrapper {
   flex: 1;
   display: flex;
@@ -188,26 +199,32 @@ header .sub {
 }
 
 /* ============================================
-   Journal Card (Page)
+   Journal / Search Card
    ============================================ */
 
-/* Card that holds either the journal editor or search results */
+/* Main card containing either:
+   - journal editor, or
+   - search results panel
+*/
 .page {
   background: #ffffff;
   border-radius: 8px;
   box-shadow:
     0 10px 30px rgba(0, 0, 0, 0.12),
-    0 0 0 1px rgba(0, 0, 0, 0.03);
+    0 0 0 1px rgba(0, 0, 0, 0.03);  /* subtle outline */
   width: 100%;
   max-width: 1100px;
   min-height: 70vh;
   padding: 1.5rem 1.75rem;
-  padding-top: 3.5rem; /* space for the top action bar */
+  padding-top: 3.5rem; /* room for top bar inside the card */
   box-sizing: border-box;
   position: relative;
 }
 
-/* Top bar inside page: Save/Delete (left) + Prev/Next (right) */
+/* Top bar inside the card:
+   - Save/Delete left
+   - Prev/Next right
+*/
 .page-top-bar {
   position: absolute;
   top: 1rem;
@@ -229,7 +246,7 @@ header .sub {
   display: block;
 }
 
-/* Inner stack of fields inside journal page */
+/* Inner editor stack for fields in the journal view */
 .editor-inner {
   display: flex;
   flex-direction: column;
@@ -238,12 +255,12 @@ header .sub {
 }
 
 /* ============================================
-   Search Results View (within the page card)
+   Search Results View (inside card)
    ============================================ */
 
-/* Container for the "Search Results" panel */
+/* Search panel container; toggled by JS */
 .page-search {
-  display: none;      /* Hidden by default; JS toggles this when searching */
+  display: none;    /* hidden by default, visible when searching */
   margin-top: 0.5rem;
 }
 
@@ -253,50 +270,45 @@ header .sub {
   margin: 0 0 0.75rem 0;
 }
 
-/* List of search results */
+/* Vertical stack of search result items */
 #search-results {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
 
-/* Individual search result card */
+/* Each search result is its own mini-card */
 .search-result-item {
   padding: 0.75rem 1rem;
   border-radius: 8px;
   background: #ffffff;
-
-  /* Match journal card shadow — no border needed */
+  /* Same shadow as main journal card for consistency */
   box-shadow:
     0 10px 30px rgba(0,0,0,0.12),
     0 0 0 1px rgba(0,0,0,0.03);
-
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
   cursor: pointer;
 }
 
-
-
 .search-result-item:hover {
-  background: #f0f4ff;
-  border-color: #c3d3ff;
+  background: #f7f9ff;
 }
 
-/* Title text of each result */
+/* Title text in search result card */
 .search-result-title {
   font-size: 0.95rem;
   font-weight: 600;
 }
 
-/* Meta info line (date, tags summary) */
+/* Meta line: date and tags summary */
 .search-result-meta {
   font-size: 0.8rem;
   color: #666;
 }
 
-/* Snippet from the entry body showing match context */
+/* Snippet from entry body showing match context */
 .search-result-snippet {
   font-size: 0.85rem;
   color: #444;
@@ -306,7 +318,7 @@ header .sub {
    Form Layout (Date, Title, Body)
    ============================================ */
 
-/* Row for date + title fields */
+/* Row containing date + title fields */
 .editor-row {
   display: flex;
   gap: 0.75rem;
@@ -314,14 +326,15 @@ header .sub {
   align-items: center;
 }
 
-/* Labels above inputs */
+/* Labels above form fields */
 label {
   font-size: 0.8rem;
   font-weight: 600;
   color: #444;
 }
 
-/* Base styles for date + text input fields */
+/* Base styles for date + text input fields in the form
+   (search input uses its own special styles above) */
 input[type="date"],
 input[type="text"] {
   border-radius: 0.35rem;
@@ -331,12 +344,12 @@ input[type="text"] {
   min-width: 0;
 }
 
-/* Title field stretches to fill remaining space in row */
+/* Title input stretches more in the row */
 input[type="text"] {
   flex: 1;
 }
 
-/* Large notes body textarea */
+/* Large notes textarea for optional text */
 textarea {
   flex: 1;
   border-radius: 0.5rem;
@@ -349,7 +362,7 @@ textarea {
   min-height: 350px;
 }
 
-/* Status text at bottom of the journal card (last saved, etc.) */
+/* Status text at the bottom of the journal card (saved / loaded info) */
 .status-text {
   font-size: 0.75rem;
   color: #777;
@@ -370,27 +383,27 @@ button {
   transition: background 0.15s, box-shadow 0.15s, transform 0.05s;
 }
 
-/* Primary button style (e.g., Save, New Entry) */
+/* Primary buttons (New Entry, Save, etc.) */
 button.primary {
   border-color: #2563eb;
   background: #2563eb;
   color: #fff;
 }
 
-/* "Danger" style (e.g., Delete) */
+/* Destructive action buttons (Delete) */
 button.danger {
   border-color: #dc2626;
   color: #dc2626;
   background: #fff;
 }
 
-/* Hover effects for all buttons */
+/* Hover effect for all buttons */
 button:hover {
   background: #f3f3f3;
   box-shadow: 0 1px 4px rgba(0,0,0,0.12);
 }
 
-/* Hover effect for primary */
+/* Hover state for primary buttons */
 button.primary:hover {
   background: #1d4ed8;
 }
@@ -401,7 +414,7 @@ button:active {
   box-shadow: none;
 }
 
-/* Disabled buttons */
+/* Disabled state */
 button:disabled {
   opacity: 0.4;
   cursor: default;
@@ -418,7 +431,7 @@ button:disabled {
   gap: 0.35rem;
 }
 
-/* Container for image preview & tags overlay */
+/* Container for the image and tag overlay */
 .image-preview {
   margin-top: 0.25rem;
   padding: 0.5rem;
@@ -433,18 +446,18 @@ button:disabled {
   box-sizing: border-box;
 }
 
-/* Placeholder text when no image is present */
+/* Placeholder text when no image is attached */
 .image-preview span {
   font-size: 0.8rem;
   color: #777;
 }
 
-/* Ensure labels on tags stay white */
+/* Ensure text on tag pins is always white on top of color */
 .image-preview .tag-pin-label {
   color: #fff !important;
 }
 
-/* The actual journal page image */
+/* The journal photo itself */
 .image-preview img {
   width: 100%;
   height: auto;
@@ -454,10 +467,10 @@ button:disabled {
 }
 
 /* ============================================
-   Tag Pills on Image
+   Tag Pills (Pinned on Image)
    ============================================ */
 
-/* Draggable tags positioned over the image */
+/* Individual draggable tag pill on the image */
 .tag-pin {
   position: absolute;
   transform: translate(-50%, -50%);
@@ -476,12 +489,12 @@ button:disabled {
   cursor: grabbing;
 }
 
-/* Label text inside tag pills */
+/* Label text inside tag pill */
 .tag-pin-label {
   pointer-events: none;
 }
 
-/* Ghost tag that follows cursor when dragging from "New Tag" button */
+/* Ghost tag following cursor when dragging from "New Tag" */
 .tag-pin-ghost {
   position: fixed;
   transform: translate(-50%, -50%);
@@ -502,7 +515,7 @@ button:disabled {
    Tag Edit Dialog
    ============================================ */
 
-/* Full-screen translucent backdrop */
+/* Full-screen overlay behind tag dialog */
 .tag-dialog-overlay {
   position: fixed;
   inset: 0;
@@ -513,7 +526,7 @@ button:disabled {
   z-index: 9998;
 }
 
-/* Dialog box itself */
+/* Dialog box for editing tag text & color */
 .tag-dialog {
   background: #fff;
   border-radius: 10px;
@@ -534,7 +547,7 @@ button:disabled {
   margin-bottom: 0.25rem;
 }
 
-/* Dialog text field section */
+/* Text field label & input */
 .tag-dialog-field label {
   font-size: 0.8rem;
   font-weight: 600;
@@ -551,7 +564,7 @@ button:disabled {
   box-sizing: border-box;
 }
 
-/* Color swatch section */
+/* Color selection area */
 .tag-dialog-colors {
   display: flex;
   flex-direction: column;
@@ -563,14 +576,14 @@ button:disabled {
   font-weight: 600;
 }
 
-/* Swatch row */
+/* Row of color swatches */
 .tag-dialog-swatches {
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem;
 }
 
-/* Individual color circle */
+/* Individual circular color swatch */
 .tag-color-swatch {
   width: 24px;
   height: 24px;
@@ -580,7 +593,7 @@ button:disabled {
   position: relative;
 }
 
-/* Outline around selected color swatch */
+/* Visual ring around selected swatch */
 .tag-color-swatch.selected::after {
   content: "";
   position: absolute;
@@ -589,7 +602,7 @@ button:disabled {
   border: 2px solid #111;
 }
 
-/* Dialog action buttons */
+/* Dialog buttons row */
 .tag-dialog-actions {
   display: flex;
   justify-content: flex-end;
@@ -597,6 +610,7 @@ button:disabled {
   margin-top: 0.25rem;
 }
 
+/* Base dialog button */
 .tag-dialog-btn {
   border-radius: 999px;
   border: 1px solid #ccc;
@@ -606,6 +620,7 @@ button:disabled {
   background: #f8f8f8;
 }
 
+/* Primary "Apply" button */
 .tag-dialog-btn-primary {
   border-color: #2563eb;
   background: #2563eb;
