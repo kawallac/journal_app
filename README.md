@@ -7,3 +7,4 @@ v0.3 Added tag functionality
 v0.3.1 Improve UI of tag functionality, arranged overall app UI
 v0.3.2 Improved UI with prev, next buttons for entries
 v0.4 (ChatGPT Baseline) Added Search Capability, overall UI polishing
+x
