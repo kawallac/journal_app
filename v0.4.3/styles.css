@@ -1,0 +1,744 @@
+/* ============================================
+   JOURNAL APP – v0.4.3
+   Global layout + sidebar + editor + calendar
+   ============================================ */
+
+/* ----- Reset-ish basics ----- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #222;
+  background: #f3f4f6;
+}
+
+/* ============================================
+   Header
+   ============================================ */
+.app-header {
+  border-bottom: 1px solid #e5e7eb;
+  background: #ffffffcc;
+  backdrop-filter: blur(6px);
+}
+
+.app-header-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0.75rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.app-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.app-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 650;
+}
+
+.app-subtitle {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.app-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.status-text {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+/* ============================================
+   Layout: Shell, Sidebar, Main
+   ============================================ */
+.app-shell {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1rem 1.5rem 2rem;
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 1.25rem;
+}
+
+/* Sidebar container */
+.sidebar {
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 0.75rem;
+  padding: 0.85rem 0.9rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* Individual sections in sidebar */
+.sidebar-section {
+  border-bottom: 1px solid #f3f4f6;
+  padding-bottom: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.sidebar-section:last-of-type {
+  border-bottom: none;
+  padding-bottom: 0;
+  margin-bottom: 0;
+}
+
+.sidebar-section-title {
+  margin: 0 0 0.35rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #9ca3af;
+}
+
+/* Main panel */
+.main {
+  min-width: 0;
+}
+
+/* Card that wraps everything in main area */
+.editor-card {
+  background: #ffffff;
+  border-radius: 0.9rem;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.06);
+  border: 1px solid #e5e7eb;
+  padding: 1rem 1.1rem 1.4rem;
+}
+
+/* ============================================
+   Buttons
+   ============================================ */
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+button:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.btn-primary {
+  background: #2563eb;
+  color: #fff;
+  border-radius: 999px;
+  padding: 0.35rem 0.9rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  border: 1px solid #1d4ed8;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
+.btn-secondary {
+  background: #e5e7eb;
+  color: #111827;
+  border-radius: 999px;
+  padding: 0.35rem 0.9rem;
+  font-size: 0.85rem;
+  border: 1px solid #d1d5db;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #d1d5db;
+}
+
+.btn-danger {
+  background: #f97373;
+  color: #fff;
+  border-radius: 999px;
+  padding: 0.35rem 0.9rem;
+  font-size: 0.85rem;
+  border: 1px solid #ef4444;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #ef4444;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: #4b5563;
+  border-radius: 999px;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.8rem;
+  border: 1px solid transparent;
+}
+
+.btn-ghost:hover:not(:disabled) {
+  border-color: #d1d5db;
+  background: #f9fafb;
+}
+
+.btn-outline {
+  background: transparent;
+  color: #1f2933;
+  border-radius: 999px;
+  padding: 0.3rem 0.9rem;
+  font-size: 0.8rem;
+  border: 1px solid #cbd5e1;
+}
+
+.btn-outline:hover:not(:disabled) {
+  background: #f9fafb;
+}
+
+.full-width {
+  width: 100%;
+}
+
+/* Icon-style button (X, calendar arrows) */
+.icon-button {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  color: #4b5563;
+  background: transparent;
+}
+
+.icon-button:hover {
+  background: #f3f4f6;
+  border-color: #e5e7eb;
+}
+
+/* ============================================
+   Editor toolbar (top row)
+   ============================================ */
+.editor-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.8rem;
+}
+
+.editor-toolbar-left,
+.editor-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* ============================================
+   Page wrapper (day results + journal + search)
+   ============================================ */
+.page-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Top bar inside page wrapper */
+.page-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.35rem 0.25rem 0.4rem;
+  border-bottom: 1px solid #f3f4f6;
+  margin-bottom: 0.9rem;
+}
+
+.page-top-bar-left,
+.page-top-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Page containers */
+.page {
+  width: 100%;
+}
+
+/* Keep some spacing between day-results and buttons */
+.page-results {
+  margin-bottom: 3rem; /* user-chosen spacing */
+}
+
+/* ============================================
+   Journal page editor layout
+   ============================================ */
+.editor-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* Simple grid for date + title line */
+.editor-row-horizontal {
+  display: grid;
+  grid-template-columns: 140px minmax(0, 1fr);
+  gap: 0.75rem;
+}
+
+.field-label {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin-bottom: 0.15rem;
+}
+
+.text-input,
+.textarea-input {
+  width: 100%;
+  border-radius: 0.5rem;
+  border: 1px solid #d1d5db;
+  padding: 0.4rem 0.55rem;
+  font-size: 0.85rem;
+  font-family: inherit;
+}
+
+.text-input:focus,
+.textarea-input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 1px #2563eb33;
+}
+
+.textarea-input {
+  min-height: 170px;
+  resize: vertical;
+}
+
+/* ============================================
+   Image + tags area
+   ============================================ */
+.image-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.image-upload-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.image-upload-row input[type="file"] {
+  font-size: 0.8rem;
+}
+
+.image-note {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+/* Image preview box */
+.image-preview {
+  position: relative;
+  width: 100%;          /* match text width */
+  min-height: 140px;
+  border-radius: 0.75rem;
+  border: 1px dashed #d1d5db;
+  background: #f9fafb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* The actual image fills width, height auto */
+.image-preview img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Fallback text when no image loaded */
+.image-preview span {
+  font-size: 0.8rem;
+  color: #777;
+}
+
+/* Tag "pills" positioned on top of the image */
+.tag-pill {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  border-radius: 999px;
+  padding: 0.37rem 0.9rem;  /* Taller oval as requested */
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #ffffff;           /* Text stays white at all times */
+  white-space: nowrap;
+  cursor: grab;
+  user-select: none;
+  box-shadow: 0 4px 8px rgba(15, 23, 42, 0.25);
+}
+
+.tag-pill:active {
+  cursor: grabbing;
+}
+
+/* Ghost tag when dragging from "New Tag" button */
+.tag-pill-ghost {
+  opacity: 0.8;
+  pointer-events: none;
+}
+
+/* ============================================
+   Tag dialog overlay
+   ============================================ */
+.tag-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 40;
+}
+
+.tag-dialog {
+  background: #ffffff;
+  border-radius: 0.9rem;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.35);
+  padding: 1rem 1.1rem 0.9rem;
+  width: 280px;
+  max-width: calc(100vw - 2rem);
+}
+
+.tag-dialog-title {
+  margin: 0 0 0.6rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.tag-dialog-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.tag-dialog-row label {
+  display: block;
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin-bottom: 0.2rem;
+}
+
+.tag-dialog-input {
+  width: 100%;
+  border-radius: 0.5rem;
+  border: 1px solid #d1d5db;
+  padding: 0.35rem 0.55rem;
+  font-size: 0.85rem;
+}
+
+.tag-dialog-input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 1px #2563eb33;
+}
+
+/* Color swatches */
+.tag-dialog-swatches {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.tag-dialog-swatch {
+  width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  cursor: pointer;
+}
+
+.tag-dialog-swatch-selected {
+  border-color: #111827;
+}
+
+/* Dialog footer buttons */
+.tag-dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.3rem;
+}
+
+/* ============================================
+   Search section (sidebar)
+   ============================================ */
+.sidebar-search {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.sidebar-search-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.35rem;
+  border-radius: 999px;
+  border: 1px solid #d1d5db;
+  background: #f9fafb;
+}
+
+.sidebar-search-inner input {
+  flex: 1;
+  border: none;
+  outline: none;
+  border-radius: 999px;
+  padding: 0.25rem 0.25rem;
+  font-size: 0.85rem;
+  box-sizing: border-box;
+  background: transparent;
+}
+
+.sidebar-search-hint {
+  font-size: 0.7rem;
+  color: #9ca3af;
+}
+
+/* ============================================
+   Search results page (main)
+   ============================================ */
+.search-card {
+  border-radius: 0.75rem;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.04);
+  padding: 0.85rem 0.9rem 0.9rem;
+  background: #ffffff;
+}
+
+.search-title {
+  margin: 0 0 0.6rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.search-results {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.search-result-item {
+  padding: 0.5rem 0.55rem;
+  border-radius: 0.6rem;
+  border: 1px solid #e5e7eb;
+  cursor: pointer;
+  transition: background 0.1s ease, box-shadow 0.1s ease, transform 0.1s ease;
+}
+
+.search-result-item:hover {
+  background: #f9fafb;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.06);
+  transform: translateY(-1px);
+}
+
+.search-result-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 0.17rem;
+}
+
+.search-result-meta {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-bottom: 0.2rem;
+}
+
+.search-result-snippet {
+  font-size: 0.78rem;
+  color: #4b5563;
+}
+
+/* ============================================
+   Day Results Card (calendar multi-entry days)
+   ============================================ */
+.day-results-card {
+  border-radius: 0.75rem;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.05);
+  padding: 0.7rem 0.8rem 0.75rem;
+}
+
+.day-results-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+}
+
+.day-results-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.day-result-item {
+  padding: 0.4rem 0.45rem;
+  border-radius: 0.55rem;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  cursor: pointer;
+  transition: background 0.1s ease, box-shadow 0.1s ease, transform 0.1s ease;
+}
+
+.day-result-item:hover {
+  background: #f3f4f6;
+  box-shadow: 0 3px 8px rgba(15, 23, 42, 0.04);
+  transform: translateY(-1px);
+}
+
+.day-result-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.18rem;
+}
+
+.day-result-meta {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+/* ============================================
+   Calendar styling (sidebar)
+   ============================================ */
+.sidebar-calendar {
+  /* extra top margin already handled by sidebar-section spacing */
+}
+
+.calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.35rem;
+}
+
+.calendar-month-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* Calendar grid uses CSS grid for weekdays + days */
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.2rem;               /* Tighten spacing so days fit nicely */
+  font-size: 0.75rem;
+}
+
+.calendar-weekday {
+  text-align: center;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #9ca3af;
+  padding-bottom: 0.15rem;
+}
+
+.calendar-empty {
+  min-height: 1.4rem;
+}
+
+/* Day button */
+.calendar-day {
+  position: relative;
+  min-height: 1.4rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: transparent;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.2rem 0;
+}
+
+/* Current date (today) – bold number */
+.calendar-day.today {
+  font-weight: 700;
+}
+
+/* Selected date – blue circle outline */
+.calendar-day.selected {
+  border-color: #2563eb;
+}
+
+/* Dot under days that have entries */
+.calendar-day.has-entry::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 0px;               /* User-chosen spacing between number and dot */
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  background: #16a34a;
+}
+
+/* Legend below calendar */
+.calendar-legend {
+  margin-top: 0.4rem;
+  font-size: 0.72rem;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #16a34a;
+}
+
+/* ============================================
+   Responsive tweaks
+   ============================================ */
+@media (max-width: 900px) {
+  .app-shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sidebar {
+    order: -1;
+  }
+}
+
+@media (max-width: 640px) {
+  .editor-row-horizontal {
+    grid-template-columns: 1fr;
+  }
+
+  .page-top-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.4rem;
+  }
+}

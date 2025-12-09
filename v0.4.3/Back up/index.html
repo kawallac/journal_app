@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Journal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- ============================================
+       JOURNAL APP – v0.4.3
+       Frontend Shell (HTML)
+       ============================================ -->
+  <header>
+    <div>
+      <h1>Journal</h1>
+      <div class="sub">Simple, private, browser-based journaling</div>
+    </div>
+  </header>
+
+  <div class="app-container">
+    <!-- =========================
+         Left Sidebar
+         ========================== -->
+    <aside class="sidebar">
+      <!-- Search bar -->
+      <div class="sidebar-search">
+        <div class="sidebar-search-inner">
+          <input
+            id="search-input"
+            type="text"
+            placeholder="Search tags & entries..."
+          />
+          <button
+            id="search-clear-btn"
+            class="search-clear-btn"
+            aria-label="Clear search"
+            title="Clear search"
+          >
+            ×
+          </button>
+        </div>
+      </div>
+
+      <!-- Monthly Calendar -->
+      <div class="sidebar-calendar">
+        <div class="calendar-header">
+          <div id="calendar-month-label" class="calendar-month-label">
+            <!-- JS will inject "March 2025" etc. -->
+          </div>
+        </div>
+        <div id="calendar-grid" class="calendar-grid">
+          <!-- JS will inject weekday headers + days -->
+        </div>
+        <div class="calendar-footer">
+          <button id="calendar-prev-btn" class="calendar-nav-btn" aria-label="Previous month">
+            ◀
+          </button>
+          <button id="calendar-next-btn" class="calendar-nav-btn" aria-label="Next month">
+            ▶
+          </button>
+        </div>
+      </div>
+
+      <!-- Button to go back to journal view (from search) -->
+      <button id="journal-view-btn" class="sidebar-button">
+        Journal View
+      </button>
+
+      <!-- Export button -->
+      <button id="export-btn" class="sidebar-button">
+        Export JSON
+      </button>
+
+      <!-- Placeholder text for future sidebar features -->
+      <div class="sidebar-title">Sidebar</div>
+      <div class="sidebar-subtitle">Navigation area (future features)</div>
+    </aside>
+
+    <!-- =========================
+         Main Editor Area
+         ========================== -->
+    <main class="editor">
+      <!-- Top toolbar for actions -->
+      <div class="editor-toolbar">
+        <button id="new-entry-btn" class="primary">New Entry</button>
+        <button id="new-tag-btn">New Tag</button>
+      </div>
+
+      <!-- Centered card area (journal or search results) -->
+      <div class="page-wrapper">
+        <div class="page">
+          
+
+          <div id="page-journal">
+  <!-- Card listing entries for selected calendar day -->
+  <div id="day-results" class="day-results"></div>
+
+  <!-- Top bar inside the journal card -->
+  <div class="page-top-bar" id="page-top-bar">
+    <div class="page-top-left-actions">
+      <button class="primary" id="save-btn">Save</button>
+      <button class="danger" id="delete-btn">Delete</button>
+    </div>
+    <div class="page-top-right-actions">
+      <button id="prev-btn">Prev</button>
+      <button id="next-btn">Next</button>
+    </div>
+  </div>
+
+  <!-- Main editor content (single entry) -->
+  <div class="editor-inner" id="editor-inner">
+    <!-- JS injects entry form here -->
+  </div>
+</div>
+
+
+          <!-- Search results view (toggled by JS) -->
+          <div id="page-search" class="page-search">
+            <h2 class="page-search-title">Search Results</h2>
+            <div id="search-results"></div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
