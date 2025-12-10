@@ -13,6 +13,7 @@
       - Calendar day-results card (for days with multiple entries)
   -->
 
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -23,7 +24,7 @@
     <div class="app-header-inner">
       <div class="app-title-group">
         <h1 class="app-title">Journal App</h1>
-        <div class="app-subtitle">v0.4.3 &mdash; Calendar + Search + Tags</div>
+        <div class="app-subtitle">v0.4.3 — Calendar + Search + Tags</div>
       </div>
       <div class="app-header-actions">
         <button id="export-btn" class="btn-outline">Export JSON</button>
@@ -76,9 +77,7 @@
           >
             &lt;
           </button>
-          <div id="calendar-month-label" class="calendar-month-label">
-            <!-- Filled by JS: e.g. "December 2025" -->
-          </div>
+          <div id="calendar-month-label" class="calendar-month-label"></div>
           <button
             id="calendar-next-btn"
             type="button"
@@ -88,12 +87,8 @@
             &gt;
           </button>
         </div>
-        <div id="calendar-grid" class="calendar-grid">
-          <!-- Filled by JS: weekday headers + day cells -->
-        </div>
-        <div class="calendar-legend">
-          <span class="legend-dot has-entry-dot"></span> Day has entries
-        </div>
+        <div id="calendar-grid" class="calendar-grid"></div>
+
       </section>
 
       <!-- Sidebar: View toggle (back from search) -->
@@ -122,18 +117,26 @@
             </button>
           </div>
           <div class="editor-toolbar-right">
-            <!-- Empty for now, reserved for future actions -->
+            <!-- Reserved for future actions -->
           </div>
         </div>
 
         <!-- ================================
-             PAGE WRAPPER (day results + journal + search)
+             PAGE WRAPPER (day results + search + journal)
              ================================ -->
         <div class="page-wrapper">
           <!-- Day-results card (calendar multi-entry days) -->
           <div id="day-results" class="page page-results" style="display: none;">
             <!-- JS will render a small card here listing entries for a day -->
           </div>
+
+          <!-- SEARCH RESULTS PAGE (stays at top when visible) -->
+          <section id="page-search" class="page page-search" style="display: none;">
+            <div class="search-card">
+              <h2 class="search-title">Search Results</h2>
+              <div id="search-results" class="search-results"></div>
+            </div>
+          </section>
 
           <!-- Page top bar: Save/Delete/Prev/Next -->
           <div id="page-top-bar" class="page-top-bar">
@@ -155,21 +158,9 @@
             </div>
           </div>
 
-          <!-- JOURNAL PAGE (editor) -->
+          <!-- JOURNAL PAGE (editor – appears under search when both are shown) -->
           <section id="page-journal" class="page page-journal">
-            <div id="editor-inner" class="editor-inner">
-              <!-- JS populates the actual form fields here -->
-            </div>
-          </section>
-
-          <!-- SEARCH RESULTS PAGE -->
-          <section id="page-search" class="page page-search" style="display: none;">
-            <div class="search-card">
-              <h2 class="search-title">Search Results</h2>
-              <div id="search-results" class="search-results">
-                <!-- JS inserts search result items here -->
-              </div>
-            </div>
+            <div id="editor-inner" class="editor-inner"></div>
           </section>
         </div>
       </div>

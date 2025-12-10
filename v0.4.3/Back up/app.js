@@ -161,7 +161,10 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentDayIso = null;
   let currentDayEntries = [];
 
-  // DOM references
+  // ============================================
+  // DOM References
+  // ============================================
+
   const editorInnerEl = document.getElementById("editor-inner");
   const dayResultsEl  = document.getElementById("day-results");
 
@@ -187,19 +190,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const calendarPrevBtn    = document.getElementById("calendar-prev-btn");
   const calendarNextBtn    = document.getElementById("calendar-next-btn");
 
-  // Tag color palette
-  const TAG_COLORS = [
-    "#2563eb", // blue
-    "#16a34a", // green
-    "#eab308", // yellow
-    "#db2777", // pink
-    "#f97316", // orange
-    "#0ea5e9"  // light blue
-  ];
-  const DEFAULT_TAG_COLOR = TAG_COLORS[0];
-
   // ============================================
-  // Helpers: sorting + current entry
+  // Helper: get current entry object
   // ============================================
 
   function getCurrentEntryObject() {
@@ -207,66 +199,292 @@ document.addEventListener("DOMContentLoaded", () => {
     return entries.find(e => e.id === currentEntryId) || null;
   }
 
+  // ============================================
+  // Helper: sorted entries (for chronological nav)
+  // ============================================
+
   function getChronologicallySortedEntries() {
     return [...entries].sort((a, b) => {
+      // Sort by date, then by createdAt/updatedAt
       const aDate = a.date || "";
       const bDate = b.date || "";
+      const cmpDate = aDate.localeCompare(bDate);
+      if (cmpDate !== 0) return cmpDate;
 
-      if (aDate < bDate) return -1;
-      if (aDate > bDate) return 1;
-
-      const aCreated = a.createdAt || a.updatedAt || "";
-      const bCreated = b.createdAt || b.updatedAt || "";
-
-      if (aCreated < bCreated) return -1;
-      if (aCreated > bCreated) return 1;
-
-      return 0;
+      const aTime = a.createdAt || a.updatedAt || "";
+      const bTime = b.createdAt || b.updatedAt || "";
+      return aTime.localeCompare(bTime);
     });
   }
 
-  function getCurrentEntryIndex() {
-    if (!currentEntryId) return -1;
-    const sorted = getChronologicallySortedEntries();
-    return sorted.findIndex(e => e.id === currentEntryId);
-  }
-
-  function updateNavAndActionsUI() {
-    const idx = getCurrentEntryIndex();
-    const sorted = getChronologicallySortedEntries();
-    const hasEntries = sorted.length > 0 && idx !== -1;
-
-    if (deleteBtnTop) {
-      deleteBtnTop.disabled = !hasEntries;
-    }
-
-    if (prevBtn && nextBtn) {
-      if (!hasEntries) {
-        prevBtn.disabled = true;
-        nextBtn.disabled = true;
-      } else {
-        prevBtn.disabled = idx <= 0;
-        nextBtn.disabled = idx >= sorted.length - 1;
-      }
-    }
-  }
-
   // ============================================
-  // View Switching: Journal vs Search
+  // View helpers (journal vs search)
   // ============================================
 
   function showJournalView() {
     currentView = "journal";
     pageJournal.style.display = "block";
     pageSearch.style.display = "none";
-    pageTopBar.style.display = "flex";
+    if (pageTopBar) pageTopBar.style.display = "flex";
   }
 
   function showSearchView() {
     currentView = "search";
     pageJournal.style.display = "none";
     pageSearch.style.display = "block";
-    pageTopBar.style.display = "none";
+    if (pageTopBar) pageTopBar.style.display = "none";
+  }
+
+  // ============================================
+  // Render Editor (fields + image + tags)
+  // ============================================
+
+  function renderEditor(entry) {
+    if (!editorInnerEl) return;
+
+    const safeEntry = entry || {
+      date: formatDateForInput(new Date()),
+      title: "",
+      body: "",
+      imageData: null,
+      tags: []
+    };
+
+    currentTags = Array.isArray(safeEntry.tags) ? [...safeEntry.tags] : [];
+
+    editorInnerEl.innerHTML = `
+      <!-- Date + Title row -->
+      <div class="editor-row-horizontal">
+        <div>
+          <div class="field-label">Date</div>
+          <input
+            id="entry-date"
+            type="date"
+            class="text-input"
+            value="${safeEntry.date || ""}"
+          />
+        </div>
+        <div>
+          <div class="field-label">Title</div>
+          <input
+            id="entry-title"
+            type="text"
+            class="text-input"
+            placeholder="Optional title for this page…"
+            value="${safeEntry.title ? safeEntry.title.replace(/"/g, "&quot;") : ""}"
+          />
+        </div>
+      </div>
+
+      <!-- Notes area -->
+      <div>
+        <div class="field-label">Notes</div>
+        <textarea
+          id="entry-body"
+          class="textarea-input"
+          placeholder="Write notes, highlights, or a summary of this journal page…"
+        >${safeEntry.body || ""}</textarea>
+      </div>
+
+      <!-- Image / Photo section -->
+      <div class="image-section">
+        <div class="image-upload-row">
+          <div>
+            <div class="field-label">Journal Page Photo</div>
+            <input id="entry-photo" type="file" accept="image/*" />
+          </div>
+          <div class="image-note">
+            Tip: snap a photo of your handwritten page and add tags on top.
+          </div>
+        </div>
+
+        <div id="image-preview" class="image-preview">
+          ${
+            safeEntry.imageData
+              ? `<img src="${safeEntry.imageData}" alt="Journal page image" />`
+              : `<span>No image yet. Upload a photo of your journal page.</span>`
+          }
+        </div>
+      </div>
+    `;
+
+    wireEditorFieldListeners();
+    renderTagsOnImage();
+  }
+
+  function wireEditorFieldListeners() {
+    const photoInput = document.getElementById("entry-photo");
+    const imagePreview = document.getElementById("image-preview");
+
+    if (photoInput && imagePreview) {
+      photoInput.addEventListener("change", () => {
+        if (photoInput.files && photoInput.files[0]) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const src = e.target.result;
+            imagePreview.innerHTML = `<img src="${src}" alt="Journal page image" />`;
+            renderTagsOnImage();
+          };
+          reader.readAsDataURL(photoInput.files[0]);
+        } else {
+          imagePreview.innerHTML =
+            `<span>No image yet. Upload a photo of your journal page.</span>`;
+          renderTagsOnImage();
+        }
+      });
+    }
+  }
+
+  // ============================================
+  // Tags on Image
+  // ============================================
+
+  function renderTagsOnImage() {
+    const imagePreview = document.getElementById("image-preview");
+    if (!imagePreview) return;
+
+    // Remove existing pills (but keep the img / span)
+    [...imagePreview.querySelectorAll(".tag-pill")].forEach(el => el.remove());
+
+    currentTags.forEach(tag => {
+      const el = document.createElement("div");
+      el.className = "tag-pill";
+      el.textContent = tag.text || "Tag";
+      el.style.backgroundColor = tag.color || "#2563eb";
+
+      const xPct = typeof tag.x === "number" ? tag.x : 50;
+      const yPct = typeof tag.y === "number" ? tag.y : 50;
+      el.style.left = `${xPct}%`;
+      el.style.top = `${yPct}%`;
+
+      el.dataset.tagId = tag.id;
+
+      el.addEventListener("mousedown", (ev) => {
+        ev.preventDefault();
+        const rect = imagePreview.getBoundingClientRect();
+        startExistingTagDrag(tag.id, ev, imagePreview, rect);
+      });
+
+      el.addEventListener("dblclick", (ev) => {
+        ev.preventDefault();
+        openTagDialog(tag.id, el);
+      });
+
+      imagePreview.appendChild(el);
+    });
+  }
+
+  function startExistingTagDrag(tagId, ev, imagePreview, rect) {
+    draggingTagId = tagId;
+    draggingNewTag = false;
+    if (!rect) rect = imagePreview.getBoundingClientRect();
+
+    const moveListener = (moveEv) => {
+      handleTagDragMove(moveEv, imagePreview, rect);
+    };
+    const upListener = (upEv) => {
+      handleTagDragEnd(upEv, imagePreview, rect, moveListener, upListener);
+    };
+
+    window.addEventListener("mousemove", moveListener);
+    window.addEventListener("mouseup", upListener);
+  }
+
+  function startNewTagDrag(ev) {
+    ev.preventDefault();
+    if (!newTagBtn) return;
+
+    draggingNewTag = true;
+    draggingTagId = null;
+
+    ghostTagEl = document.createElement("div");
+    ghostTagEl.className = "tag-pill tag-pill-ghost";
+    ghostTagEl.textContent = "New tag";
+    ghostTagEl.style.backgroundColor = "#2563eb";
+    ghostTagEl.style.left = ev.clientX + "px";
+    ghostTagEl.style.top = ev.clientY + "px";
+    ghostTagEl.style.position = "fixed";
+    ghostTagEl.style.transform = "translate(-50%, -50%)";
+    document.body.appendChild(ghostTagEl);
+
+    const moveListener = (moveEv) => {
+      if (!ghostTagEl) return;
+      ghostTagEl.style.left = moveEv.clientX + "px";
+      ghostTagEl.style.top = moveEv.clientY + "px";
+    };
+
+    const upListener = (upEv) => {
+      if (ghostTagEl) {
+        ghostTagEl.remove();
+        ghostTagEl = null;
+      }
+      window.removeEventListener("mousemove", moveListener);
+      window.removeEventListener("mouseup", upListener);
+
+      const imagePreview = document.getElementById("image-preview");
+      if (!imagePreview) return;
+      const rect = imagePreview.getBoundingClientRect();
+
+      if (
+        upEv.clientX >= rect.left &&
+        upEv.clientX <= rect.right &&
+        upEv.clientY >= rect.top &&
+        upEv.clientY <= rect.bottom
+      ) {
+        const xPct = ((upEv.clientX - rect.left) / rect.width) * 100;
+        const yPct = ((upEv.clientY - rect.top) / rect.height) * 100;
+        const newTag = {
+          id: generateId(),
+          text: "New tag",
+          color: "#2563eb",
+          x: xPct,
+          y: yPct
+        };
+        currentTags.push(newTag);
+        renderTagsOnImage();
+      }
+    };
+
+    window.addEventListener("mousemove", moveListener);
+    window.addEventListener("mouseup", upListener);
+  }
+
+  function handleTagDragMove(ev, imagePreview, rect) {
+    if (!draggingTagId && !draggingNewTag) return;
+    if (!rect) rect = imagePreview.getBoundingClientRect();
+
+    const tagEl = imagePreview.querySelector(
+      `.tag-pill[data-tag-id="${draggingTagId}"]`
+    );
+    if (!tagEl) return;
+
+    const xPct = ((ev.clientX - rect.left) / rect.width) * 100;
+    const yPct = ((ev.clientY - rect.top) / rect.height) * 100;
+    tagEl.style.left = `${xPct}%`;
+    tagEl.style.top = `${yPct}%`;
+  }
+
+  function handleTagDragEnd(ev, imagePreview, rect, moveListener, upListener) {
+    window.removeEventListener("mousemove", moveListener);
+    window.removeEventListener("mouseup", upListener);
+
+    if (draggingTagId) {
+      const tagEl = imagePreview.querySelector(
+        `.tag-pill[data-tag-id="${draggingTagId}"]`
+      );
+      if (tagEl && rect) {
+        const left = parseFloat(tagEl.style.left || "50");
+        const top = parseFloat(tagEl.style.top || "50");
+        const tag = currentTags.find(t => t.id === draggingTagId);
+        if (tag) {
+          tag.x = left;
+          tag.y = top;
+        }
+      }
+    }
+
+    draggingTagId = null;
+    draggingNewTag = false;
   }
 
   // ============================================
@@ -276,447 +494,148 @@ document.addEventListener("DOMContentLoaded", () => {
   function setupTagDialog() {
     tagDialogOverlay = document.createElement("div");
     tagDialogOverlay.className = "tag-dialog-overlay";
+    tagDialogOverlay.style.display = "none";
 
     tagDialogEl = document.createElement("div");
     tagDialogEl.className = "tag-dialog";
 
-    const titleEl = document.createElement("div");
-    titleEl.className = "tag-dialog-title";
-    titleEl.textContent = "Edit Tag";
+    tagDialogEl.innerHTML = `
+      <h2 class="tag-dialog-title">Edit Tag</h2>
+      <div class="tag-dialog-body">
+        <div class="tag-dialog-row">
+          <label for="tag-dialog-text">Tag text</label>
+          <input id="tag-dialog-text" type="text" class="tag-dialog-input" />
+        </div>
+        <div class="tag-dialog-row">
+          <label>Color</label>
+          <div class="tag-dialog-swatches" id="tag-dialog-swatches"></div>
+        </div>
+      </div>
+      <div class="tag-dialog-footer">
+        <button id="tag-dialog-cancel" class="btn-secondary" type="button">Cancel</button>
+        <button id="tag-dialog-apply" class="btn-primary" type="button">Apply</button>
+      </div>
+    `;
 
-    const textField = document.createElement("div");
-    textField.className = "tag-dialog-field";
+    tagDialogOverlay.appendChild(tagDialogEl);
+    document.body.appendChild(tagDialogOverlay);
 
-    const textLabel = document.createElement("label");
-    textLabel.textContent = "Label";
-    textLabel.setAttribute("for", "tag-dialog-text");
+    tagDialogTextInput = document.getElementById("tag-dialog-text");
+    tagDialogApplyBtn = document.getElementById("tag-dialog-apply");
+    tagDialogCancelBtn = document.getElementById("tag-dialog-cancel");
 
-    tagDialogTextInput = document.createElement("input");
-    tagDialogTextInput.type = "text";
-    tagDialogTextInput.id = "tag-dialog-text";
-    tagDialogTextInput.placeholder = "Tag text";
-
-    textField.appendChild(textLabel);
-    textField.appendChild(tagDialogTextInput);
-
-    const colorSection = document.createElement("div");
-    colorSection.className = "tag-dialog-colors";
-
-    const colorLabel = document.createElement("div");
-    colorLabel.className = "tag-dialog-colors-label";
-    colorLabel.textContent = "Color";
-
-    const swatchesContainer = document.createElement("div");
-    swatchesContainer.className = "tag-dialog-swatches";
-
-    TAG_COLORS.forEach(color => {
+    const swatchesContainer = document.getElementById("tag-dialog-swatches");
+    const colors = [
+      "#2563eb", // blue
+      "#16a34a", // green
+      "#f97316", // orange
+      "#db2777", // pink
+      "#7c3aed", // purple
+      "#0f172a"  // slate
+    ];
+    colors.forEach(color => {
       const swatch = document.createElement("div");
-      swatch.className = "tag-color-swatch";
+      swatch.className = "tag-dialog-swatch";
       swatch.style.backgroundColor = color;
-      swatch.dataset.color = color;
       swatch.addEventListener("click", () => {
-        selectDialogColor(color);
+        selectTagColor(color);
       });
       swatchesContainer.appendChild(swatch);
       tagDialogSwatches.push(swatch);
     });
 
-    colorSection.appendChild(colorLabel);
-    colorSection.appendChild(swatchesContainer);
-
-    const actions = document.createElement("div");
-    actions.className = "tag-dialog-actions";
-
-    tagDialogCancelBtn = document.createElement("button");
-    tagDialogCancelBtn.type = "button";
-    tagDialogCancelBtn.className = "tag-dialog-btn";
-    tagDialogCancelBtn.textContent = "Cancel";
-    tagDialogCancelBtn.addEventListener("click", () => {
-      closeTagDialog(false);
-    });
-
-    tagDialogApplyBtn = document.createElement("button");
-    tagDialogApplyBtn.type = "button";
-    tagDialogApplyBtn.className = "tag-dialog-btn tag-dialog-btn-primary";
-    tagDialogApplyBtn.textContent = "Apply";
     tagDialogApplyBtn.addEventListener("click", () => {
-      closeTagDialog(true);
+      applyTagDialogChanges();
     });
 
-    actions.appendChild(tagDialogCancelBtn);
-    actions.appendChild(tagDialogApplyBtn);
+    tagDialogCancelBtn.addEventListener("click", () => {
+      closeTagDialog();
+    });
 
-    tagDialogEl.appendChild(titleEl);
-    tagDialogEl.appendChild(textField);
-    tagDialogEl.appendChild(colorSection);
-    tagDialogEl.appendChild(actions);
-
-    tagDialogOverlay.appendChild(tagDialogEl);
-    document.body.appendChild(tagDialogOverlay);
-
-    tagDialogOverlay.addEventListener("mousedown", (e) => {
-      if (e.target === tagDialogOverlay) {
-        closeTagDialog(false);
+    tagDialogOverlay.addEventListener("click", (ev) => {
+      if (ev.target === tagDialogOverlay) {
+        closeTagDialog();
       }
     });
   }
 
-  function selectDialogColor(color) {
+  function selectTagColor(color) {
     tagDialogSelectedColor = color;
     tagDialogSwatches.forEach(swatch => {
-      if (swatch.dataset.color === color) {
-        swatch.classList.add("selected");
+      if (swatch.style.backgroundColor === color) {
+        swatch.classList.add("tag-dialog-swatch-selected");
       } else {
-        swatch.classList.remove("selected");
+        swatch.classList.remove("tag-dialog-swatch-selected");
       }
     });
   }
 
-  function openTagDialog(tag, tagEl) {
+  function openTagDialog(tagId, tagEl) {
+    const tag = currentTags.find(t => t.id === tagId);
+    if (!tag) return;
+
     tagDialogCurrentTag = tag;
     tagDialogCurrentTagEl = tagEl;
 
     tagDialogTextInput.value = tag.text || "";
-    const colorToUse = tag.color || DEFAULT_TAG_COLOR;
-    selectDialogColor(colorToUse);
+    selectTagColor(tag.color || "#2563eb");
 
     tagDialogOverlay.style.display = "flex";
     tagDialogTextInput.focus();
-    tagDialogTextInput.select();
   }
 
-  function closeTagDialog(applyChanges) {
-    if (applyChanges && tagDialogCurrentTag && tagDialogCurrentTagEl) {
-      const newText = tagDialogTextInput.value.trim();
-      const newColor = tagDialogSelectedColor || DEFAULT_TAG_COLOR;
-
-      tagDialogCurrentTag.text = newText || "Tag";
-      tagDialogCurrentTag.color = newColor;
-
-      const label = tagDialogCurrentTagEl.querySelector(".tag-pin-label");
-      if (label) label.textContent = tagDialogCurrentTag.text;
-      tagDialogCurrentTagEl.style.backgroundColor = newColor;
-    }
-
+  function closeTagDialog() {
     tagDialogOverlay.style.display = "none";
     tagDialogCurrentTag = null;
     tagDialogCurrentTagEl = null;
   }
 
-  // ============================================
-  // Tag Rendering & Dragging
-  // ============================================
+  function applyTagDialogChanges() {
+    if (!tagDialogCurrentTag) return;
 
-  function renderTagsOverlay() {
-    const previewEl = document.getElementById("image-preview");
-    if (!previewEl) return;
-
-    previewEl.querySelectorAll(".tag-pin").forEach(el => el.remove());
-
-    const img = previewEl.querySelector("img");
-    if (!img) return;
-
-    if (!Array.isArray(currentTags) || currentTags.length === 0) return;
-
-    currentTags.forEach(tag => {
-      const tagEl = document.createElement("div");
-      tagEl.className = "tag-pin";
-      tagEl.dataset.id = tag.id;
-      tagEl.style.left = `${tag.x}%`;
-      tagEl.style.top = `${tag.y}%`;
-      tagEl.style.backgroundColor = tag.color || DEFAULT_TAG_COLOR;
-
-      const label = document.createElement("span");
-      label.className = "tag-pin-label";
-      label.textContent = tag.text || "Tag";
-      tagEl.appendChild(label);
-
-      tagEl.addEventListener("mousedown", (e) => {
-        e.preventDefault();
-        startDraggingTag(tag.id);
-      });
-
-      tagEl.addEventListener("dblclick", (e) => {
-        e.stopPropagation();
-        openTagDialog(tag, tagEl);
-      });
-
-      previewEl.appendChild(tagEl);
-    });
-  }
-
-  function startDraggingTag(tagId) {
-    draggingTagId = tagId;
-    document.addEventListener("mousemove", onTagMouseMove);
-    document.addEventListener("mouseup", stopDraggingTag);
-  }
-
-  function onTagMouseMove(e) {
-    if (!draggingTagId) return;
-    const previewEl = document.getElementById("image-preview");
-    if (!previewEl) return;
-
-    const rect = previewEl.getBoundingClientRect();
-    if (rect.width === 0 || rect.height === 0) return;
-
-    const relX = ((e.clientX - rect.left) / rect.width) * 100;
-    const relY = ((e.clientY - rect.top) / rect.height) * 100;
-
-    const clampedX = Math.min(98, Math.max(2, relX));
-    const clampedY = Math.min(98, Math.max(2, relY));
-
-    const tag = currentTags.find(t => t.id === draggingTagId);
-    if (!tag) return;
-
-    tag.x = clampedX;
-    tag.y = clampedY;
-
-    const tagEl = document.querySelector(`.tag-pin[data-id="${tag.id}"]`);
-    if (tagEl) {
-      tagEl.style.left = `${tag.x}%`;
-      tagEl.style.top = `${tag.y}%`;
-    }
-  }
-
-  function stopDraggingTag() {
-    draggingTagId = null;
-    document.removeEventListener("mousemove", onTagMouseMove);
-    document.removeEventListener("mouseup", stopDraggingTag);
+    tagDialogCurrentTag.text = tagDialogTextInput.value.trim() || "Tag";
+    tagDialogCurrentTag.color = tagDialogSelectedColor || "#2563eb";
+    renderTagsOnImage();
+    closeTagDialog();
   }
 
   // ============================================
-  // New Tag Drag from Button
-  // ============================================ */
-
-  function startNewTagDrag(e) {
-    const previewEl = document.getElementById("image-preview");
-    if (!previewEl) {
-      alert("Open an entry first.");
-      return;
-    }
-    const img = previewEl.querySelector("img");
-    if (!img) {
-      alert("Add a photo to this entry before adding tags.");
-      return;
-    }
-
-    draggingNewTag = true;
-
-    ghostTagEl = document.createElement("div");
-    ghostTagEl.className = "tag-pin-ghost";
-    ghostTagEl.textContent = "New tag";
-    document.body.appendChild(ghostTagEl);
-
-    moveGhostTag(e.clientX, e.clientY);
-
-    document.addEventListener("mousemove", onNewTagDragMove);
-    document.addEventListener("mouseup", stopNewTagDrag);
-    e.preventDefault();
-  }
-
-  function moveGhostTag(clientX, clientY) {
-    if (!ghostTagEl) return;
-    ghostTagEl.style.left = clientX + "px";
-    ghostTagEl.style.top  = clientY + "px";
-  }
-
-  function onNewTagDragMove(e) {
-    if (!draggingNewTag) return;
-    moveGhostTag(e.clientX, e.clientY);
-  }
-
-  function stopNewTagDrag(e) {
-    if (!draggingNewTag) return;
-
-    draggingNewTag = false;
-
-    document.removeEventListener("mousemove", onNewTagDragMove);
-    document.removeEventListener("mouseup", stopNewTagDrag);
-
-    if (ghostTagEl) {
-      ghostTagEl.remove();
-      ghostTagEl = null;
-    }
-
-    const previewEl = document.getElementById("image-preview");
-    if (!previewEl) return;
-
-    const rect = previewEl.getBoundingClientRect();
-    const inside =
-      e.clientX >= rect.left &&
-      e.clientX <= rect.right &&
-      e.clientY >= rect.top &&
-      e.clientY <= rect.bottom;
-
-    if (!inside) return;
-
-    const relX = ((e.clientX - rect.left) / rect.width) * 100;
-    const relY = ((e.clientY - rect.top) / rect.height) * 100;
-    const clampedX = Math.min(98, Math.max(2, relX));
-    const clampedY = Math.min(98, Math.max(2, relY));
-
-    const newTag = {
-      id: generateId(),
-      text: "New tag",
-      color: DEFAULT_TAG_COLOR,
-      x: clampedX,
-      y: clampedY
-    };
-    currentTags.push(newTag);
-    renderTagsOverlay();
-  }
-
-  // ============================================
-  // Editor Rendering (single entry)
-  // ============================================
-
-  function renderEditor(entry) {
-    currentTags = Array.isArray(entry.tags)
-      ? entry.tags.map(t => ({ ...t }))
-      : [];
-
-    const firstAttachment = Array.isArray(entry.attachments) && entry.attachments[0]
-      ? entry.attachments[0]
-      : null;
-    const imageDataToUse = firstAttachment?.data || entry.imageData || null;
-
-    editorInnerEl.innerHTML = `
-      <div class="editor-row">
-        <div>
-          <label for="entry-date">Date</label>
-          <input type="date" id="entry-date" value="${entry.date}">
-        </div>
-
-        <div style="flex:1;">
-          <label for="entry-title">Title</label>
-          <input type="text" id="entry-title" placeholder="Title" value="${entry.title}">
-        </div>
-      </div>
-
-      <div class="image-section">
-        <label for="entry-photo">Photo of journal page</label>
-        <input type="file" id="entry-photo" accept="image/*">
-        <div class="image-preview" id="image-preview">
-          ${
-            imageDataToUse
-              ? `<img src="${imageDataToUse}" alt="Journal page image">`
-              : `<span>No image attached yet.</span>`
-          }
-        </div>
-      </div>
-
-      <div style="display:flex; flex-direction:column; flex:1;">
-        <label for="entry-body">Entry</label>
-        <textarea id="entry-body" placeholder="Optional notes about this page...">${entry.body}</textarea>
-      </div>
-
-      <div class="status-text" id="status-text">
-        ${
-          currentEntryId
-            ? (lastSavedAt
-                ? `Last saved at ${lastSavedAt.toLocaleTimeString()}`
-                : "Loaded existing entry")
-            : "New entry (not yet saved)"
-        }
-      </div>
-    `;
-
-    const photoInput = document.getElementById("entry-photo");
-    const previewEl  = document.getElementById("image-preview");
-
-    if (photoInput && previewEl) {
-      photoInput.addEventListener("change", () => {
-        if (photoInput.files && photoInput.files[0]) {
-          const file = photoInput.files[0];
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            previewEl.innerHTML = `<img src="${e.target.result}" alt="Journal page image">`;
-            renderTagsOverlay();
-          };
-          reader.readAsDataURL(file);
-        } else {
-          previewEl.innerHTML = `<span>No image attached yet.</span>`;
-        }
-      });
-    }
-
-    renderTagsOverlay();
-  }
-
-  // ============================================
-  // Navigation Between Entries
-  // ============================================
-
-  function goToEntryAtIndex(idx) {
-    const sorted = getChronologicallySortedEntries();
-    if (idx < 0 || idx >= sorted.length) return;
-    const entry = sorted[idx];
-    currentEntryId = entry.id;
-    lastSavedAt = entry.updatedAt ? new Date(entry.updatedAt) : null;
-    renderEditor(entry);
-    updateNavAndActionsUI();
-    showJournalView();
-    renderCalendar(); // keep highlight in sync
-  }
-
-  function goToPreviousEntry() {
-    const idx = getCurrentEntryIndex();
-    if (idx <= 0) return;
-    goToEntryAtIndex(idx - 1);
-  }
-
-  function goToNextEntry() {
-    const idx = getCurrentEntryIndex();
-    const sorted = getChronologicallySortedEntries();
-    if (idx === -1 || idx >= sorted.length - 1) return;
-    goToEntryAtIndex(idx + 1);
-  }
-
-  function openEntryById(entryId) {
-    const sorted = getChronologicallySortedEntries();
-    const idx = sorted.findIndex(e => e.id === entryId);
-    if (idx === -1) return;
-    goToEntryAtIndex(idx);
-  }
-
-  // ============================================
-  // Entry Operations: New, Save, Delete
+  // Save / Delete / New Entry
   // ============================================
 
   function newEntry() {
-    currentEntryId = null;
-    lastSavedAt = null;
-    currentTags = [];
-    currentDayIso = null;
-    currentDayEntries = [];
-    renderDayResults();
+    const now = new Date();
+    const dateStr = formatDateForInput(now);
 
-    const fresh = {
-      id: null,
+    const newEntryObj = {
+      id: generateId(),
       notebookId: "default",
-      date: formatDateForInput(new Date()),
+      date: dateStr,
       title: "",
       body: "",
       imageData: null,
       attachments: [],
       tags: [],
-      createdAt: null,
-      updatedAt: null
+      createdAt: now.toISOString(),
+      updatedAt: now.toISOString()
     };
-    renderEditor(fresh);
-    updateStatus("New entry (not yet saved)");
+
+    entries.push(newEntryObj);
+    currentEntryId = newEntryObj.id;
+    lastSavedAt = now;
+
+    renderEditor(newEntryObj);
     updateNavAndActionsUI();
-    showJournalView();
+    renderCalendar();
   }
 
   function saveCurrentEntry() {
-    const dateInput  = document.getElementById("entry-date");
+    const dateInput = document.getElementById("entry-date");
     const titleInput = document.getElementById("entry-title");
-    const bodyInput  = document.getElementById("entry-body");
+    const bodyInput = document.getElementById("entry-body");
     const photoInput = document.getElementById("entry-photo");
-    const previewEl  = document.getElementById("image-preview");
 
-    if (!dateInput || !titleInput || !bodyInput || !photoInput || !previewEl) return;
+    if (!dateInput || !titleInput || !bodyInput) return;
 
     const dateValue  = dateInput.value || formatDateForInput(new Date());
     const titleValue = titleInput.value.trim();
@@ -724,14 +643,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const existing = getCurrentEntryObject();
     const now = new Date();
-    const nowISO = now.toISOString();
+       const nowISO = now.toISOString();
 
-    const existingAttachment = existing && Array.isArray(existing.attachments) && existing.attachments[0]
-      ? existing.attachments[0]
-      : null;
+    const existingAttachment = existing &&
+      Array.isArray(existing.attachments) &&
+      existing.attachments[0]
+        ? existing.attachments[0]
+        : null;
     const existingImageData = existingAttachment?.data || existing?.imageData || null;
 
-    if (photoInput.files && photoInput.files[0]) {
+    if (photoInput && photoInput.files && photoInput.files[0]) {
       const file = photoInput.files[0];
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -799,7 +720,7 @@ document.addEventListener("DOMContentLoaded", () => {
     updateStatus(`Saved at ${now.toLocaleTimeString()}`);
     updateNavAndActionsUI();
     renderCalendar();
-    // Day results will be refreshed next time a calendar day is clicked.
+    // Day results will be refreshed automatically via goToEntryAtIndex.
   }
 
   function deleteCurrentEntry() {
@@ -832,6 +753,85 @@ document.addEventListener("DOMContentLoaded", () => {
 
     goToEntryAtIndex(newIdx);
     renderCalendar();
+  }
+
+  // ============================================
+  // Navigation (Prev / Next) – Option B:
+  // keep day-results card in sync with current entry's date.
+  // ============================================
+
+  function updateNavAndActionsUI() {
+    const sorted = getChronologicallySortedEntries();
+    if (!currentEntryId || sorted.length === 0) {
+      if (prevBtn) prevBtn.disabled = true;
+      if (nextBtn) nextBtn.disabled = true;
+      if (deleteBtnTop) deleteBtnTop.disabled = !currentEntryId;
+      return;
+    }
+
+    const idx = sorted.findIndex(e => e.id === currentEntryId);
+    const hasPrev = idx > 0;
+    const hasNext = idx < sorted.length - 1;
+
+    if (prevBtn) prevBtn.disabled = !hasPrev;
+    if (nextBtn) prevBtn && (nextBtn.disabled = !hasNext);
+    if (deleteBtnTop) deleteBtnTop.disabled = false;
+  }
+
+  function goToEntryAtIndex(idx) {
+    const sorted = getChronologicallySortedEntries();
+    if (idx < 0 || idx >= sorted.length) return;
+    const target = sorted[idx];
+
+    currentEntryId = target.id;
+    lastSavedAt = target.updatedAt ? new Date(target.updatedAt) : null;
+
+    renderEditor(target);
+    updateNavAndActionsUI();
+    renderCalendar();
+
+    // --- Option B: sync day-results card to this entry's date ---
+    const targetDateIso = target.date || null;
+    if (targetDateIso) {
+      const sameDayEntries = sorted.filter(e => e.date === targetDateIso);
+      if (sameDayEntries.length > 1) {
+        currentDayIso = targetDateIso;
+        currentDayEntries = sameDayEntries;
+      } else {
+        currentDayIso = null;
+        currentDayEntries = [];
+      }
+    } else {
+      currentDayIso = null;
+      currentDayEntries = [];
+    }
+    renderDayResults();
+  }
+
+  function goToPreviousEntry() {
+    const sorted = getChronologicallySortedEntries();
+    if (!currentEntryId || sorted.length === 0) return;
+    const idx = sorted.findIndex(e => e.id === currentEntryId);
+    if (idx <= 0) return;
+
+    goToEntryAtIndex(idx - 1);
+  }
+
+  function goToNextEntry() {
+    const sorted = getChronologicallySortedEntries();
+    if (!currentEntryId || sorted.length === 0) return;
+    const idx = sorted.findIndex(e => e.id === currentEntryId);
+    if (idx === -1 || idx >= sorted.length - 1) return;
+
+    goToEntryAtIndex(idx + 1);
+  }
+
+  function openEntryById(entryId) {
+    const sorted = getChronologicallySortedEntries();
+    const idx = sorted.findIndex(e => e.id === entryId);
+    if (idx === -1) return;
+    showJournalView();
+    goToEntryAtIndex(idx);
   }
 
   // ============================================
@@ -872,7 +872,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!query.trim()) {
       const msg = document.createElement("div");
       msg.className = "search-result-snippet";
-      msg.textContent = "Type in the search box to find entries by title, notes, or tags.";
+      msg.textContent =
+        "Type in the search box to find entries by title, notes, or tags.";
       searchResultsEl.appendChild(msg);
       return;
     }
@@ -1016,7 +1017,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const sorted = getChronologicallySortedEntries();
 
-    // Determine which date is "selected" based on the current entry
     const currentEntry = getCurrentEntryObject();
     const selectedDateIso = currentEntry?.date || null;
 
@@ -1135,19 +1135,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const sameDayEntries = sorted.filter(e => e.date === isoDate);
 
     if (sameDayEntries.length === 0) {
-      // No entry on this day – clear day card and leave current entry untouched.
       currentDayIso = null;
       currentDayEntries = [];
       renderDayResults();
       return;
     }
 
-    // Update per-day card state and show the card
     currentDayIso = isoDate;
     currentDayEntries = sameDayEntries;
     renderDayResults();
 
-    // Open the first entry for that day in the editor (below the card)
     openEntryById(sameDayEntries[0].id);
   }
 
@@ -1195,11 +1192,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (searchInput) {
-      searchInput.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-          const query = searchInput.value;
-          runSearch(query);
-          searchInput.value = "";
+      searchInput.addEventListener("keydown", (ev) => {
+        if (ev.key === "Enter") {
+          runSearch(searchInput.value || "");
+          searchInput.value = ""; // auto clear on execute
         }
       });
     }
@@ -1207,16 +1203,13 @@ document.addEventListener("DOMContentLoaded", () => {
     if (searchClearBtn) {
       searchClearBtn.addEventListener("click", () => {
         searchInput.value = "";
-        if (currentView === "search") {
-          runSearch("");
-        }
+        runSearch(""); // show "type to search" message
       });
     }
 
     if (calendarPrevBtn) {
       calendarPrevBtn.addEventListener("click", () => changeCalendarMonth(-1));
     }
-
     if (calendarNextBtn) {
       calendarNextBtn.addEventListener("click", () => changeCalendarMonth(1));
     }

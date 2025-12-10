@@ -2,129 +2,181 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Journal</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Journal App – v0.4.3</title>
+
+  <!-- 
+    JOURNAL APP – v0.4.3
+    Frontend-only prototype:
+      - Left sidebar with search + monthly calendar
+      - Main journal editor with image + tags
+      - Search results view
+      - Calendar day-results card (for days with multiple entries)
+  -->
+
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <!-- ============================================
-       JOURNAL APP – v0.4.3
-       Frontend Shell (HTML)
+       App Header
        ============================================ -->
-  <header>
-    <div>
-      <h1>Journal</h1>
-      <div class="sub">Simple, private, browser-based journaling</div>
+  <header class="app-header">
+    <div class="app-header-inner">
+      <div class="app-title-group">
+        <h1 class="app-title">Journal App</h1>
+        <div class="app-subtitle">v0.4.3 &mdash; Calendar + Search + Tags</div>
+      </div>
+      <div class="app-header-actions">
+        <button id="export-btn" class="btn-outline">Export JSON</button>
+        <span id="status-text" class="status-text"></span>
+      </div>
     </div>
   </header>
 
-  <div class="app-container">
-    <!-- =========================
-         Left Sidebar
-         ========================== -->
+  <!-- ============================================
+       Main Layout
+       ============================================ -->
+  <div class="app-shell">
+    <!-- ========== LEFT SIDEBAR ========== -->
     <aside class="sidebar">
-      <!-- Search bar -->
-      <div class="sidebar-search">
-        <div class="sidebar-search-inner">
-          <input
-            id="search-input"
-            type="text"
-            placeholder="Search tags & entries..."
-          />
-          <button
-            id="search-clear-btn"
-            class="search-clear-btn"
-            aria-label="Clear search"
-            title="Clear search"
-          >
-            ×
-          </button>
-        </div>
-      </div>
-
-      <!-- Monthly Calendar -->
-      <div class="sidebar-calendar">
-        <div class="calendar-header">
-          <div id="calendar-month-label" class="calendar-month-label">
-            <!-- JS will inject "March 2025" etc. -->
+      <!-- Sidebar: Search -->
+      <section class="sidebar-section">
+        <h2 class="sidebar-section-title">Search</h2>
+        <div class="sidebar-search">
+          <div class="sidebar-search-inner">
+            <input
+              id="search-input"
+              type="text"
+              placeholder="Search title, notes, tags…"
+              aria-label="Search journal"
+            />
+            <button
+              id="search-clear-btn"
+              type="button"
+              class="icon-button"
+              aria-label="Clear search"
+            >
+              &times;
+            </button>
           </div>
+          <div class="sidebar-search-hint">
+            Press Enter to search
+          </div>
+        </div>
+      </section>
+
+      <!-- Sidebar: Calendar -->
+      <section class="sidebar-section sidebar-calendar">
+        <h2 class="sidebar-section-title">Calendar</h2>
+        <div class="calendar-header">
+          <button
+            id="calendar-prev-btn"
+            type="button"
+            class="icon-button"
+            aria-label="Previous month"
+          >
+            &lt;
+          </button>
+          <div id="calendar-month-label" class="calendar-month-label">
+            <!-- Filled by JS: e.g. "December 2025" -->
+          </div>
+          <button
+            id="calendar-next-btn"
+            type="button"
+            class="icon-button"
+            aria-label="Next month"
+          >
+            &gt;
+          </button>
         </div>
         <div id="calendar-grid" class="calendar-grid">
-          <!-- JS will inject weekday headers + days -->
+          <!-- Filled by JS: weekday headers + day cells -->
         </div>
-        <div class="calendar-footer">
-          <button id="calendar-prev-btn" class="calendar-nav-btn" aria-label="Previous month">
-            ◀
-          </button>
-          <button id="calendar-next-btn" class="calendar-nav-btn" aria-label="Next month">
-            ▶
-          </button>
+        <div class="calendar-legend">
+          <span class="legend-dot has-entry-dot"></span> Day has entries
         </div>
-      </div>
+      </section>
 
-      <!-- Button to go back to journal view (from search) -->
-      <button id="journal-view-btn" class="sidebar-button">
-        Journal View
-      </button>
-
-      <!-- Export button -->
-      <button id="export-btn" class="sidebar-button">
-        Export JSON
-      </button>
-
-      <!-- Placeholder text for future sidebar features -->
-      <div class="sidebar-title">Sidebar</div>
-      <div class="sidebar-subtitle">Navigation area (future features)</div>
+      <!-- Sidebar: View toggle (back from search) -->
+      <section class="sidebar-section">
+        <button
+          id="journal-view-btn"
+          type="button"
+          class="btn-secondary full-width"
+        >
+          Back to Journal
+        </button>
+      </section>
     </aside>
 
-    <!-- =========================
-         Main Editor Area
-         ========================== -->
-    <main class="editor">
-      <!-- Top toolbar for actions -->
-      <div class="editor-toolbar">
-        <button id="new-entry-btn" class="primary">New Entry</button>
-        <button id="new-tag-btn">New Tag</button>
-      </div>
-
-      <!-- Centered card area (journal or search results) -->
-      <div class="page-wrapper">
-        <div class="page">
-          
-
-          <div id="page-journal">
-  <!-- Card listing entries for selected calendar day -->
-  <div id="day-results" class="day-results"></div>
-
-  <!-- Top bar inside the journal card -->
-  <div class="page-top-bar" id="page-top-bar">
-    <div class="page-top-left-actions">
-      <button class="primary" id="save-btn">Save</button>
-      <button class="danger" id="delete-btn">Delete</button>
-    </div>
-    <div class="page-top-right-actions">
-      <button id="prev-btn">Prev</button>
-      <button id="next-btn">Next</button>
-    </div>
-  </div>
-
-  <!-- Main editor content (single entry) -->
-  <div class="editor-inner" id="editor-inner">
-    <!-- JS injects entry form here -->
-  </div>
-</div>
-
-
-          <!-- Search results view (toggled by JS) -->
-          <div id="page-search" class="page-search">
-            <h2 class="page-search-title">Search Results</h2>
-            <div id="search-results"></div>
+    <!-- ========== MAIN CONTENT ========== -->
+    <main class="main">
+      <div class="editor-card">
+        <!-- Top toolbar: New entry / New tag -->
+        <div class="editor-toolbar">
+          <div class="editor-toolbar-left">
+            <button id="new-entry-btn" type="button" class="btn-primary">
+              New Entry
+            </button>
+            <button id="new-tag-btn" type="button" class="btn-secondary">
+              New Tag
+            </button>
           </div>
+          <div class="editor-toolbar-right">
+            <!-- Empty for now, reserved for future actions -->
+          </div>
+        </div>
+
+        <!-- ================================
+             PAGE WRAPPER (day results + journal + search)
+             ================================ -->
+        <div class="page-wrapper">
+          <!-- Day-results card (calendar multi-entry days) -->
+          <div id="day-results" class="page page-results" style="display: none;">
+            <!-- JS will render a small card here listing entries for a day -->
+          </div>
+
+          <!-- Page top bar: Save/Delete/Prev/Next -->
+          <div id="page-top-bar" class="page-top-bar">
+            <div class="page-top-bar-left">
+              <button id="save-btn" type="button" class="btn-primary">
+                Save
+              </button>
+              <button id="delete-btn" type="button" class="btn-danger">
+                Delete
+              </button>
+            </div>
+            <div class="page-top-bar-right">
+              <button id="prev-btn" type="button" class="btn-ghost">
+                &larr; Prev
+              </button>
+              <button id="next-btn" type="button" class="btn-ghost">
+                Next &rarr;
+              </button>
+            </div>
+          </div>
+
+          <!-- JOURNAL PAGE (editor) -->
+          <section id="page-journal" class="page page-journal">
+            <div id="editor-inner" class="editor-inner">
+              <!-- JS populates the actual form fields here -->
+            </div>
+          </section>
+
+          <!-- SEARCH RESULTS PAGE -->
+          <section id="page-search" class="page page-search" style="display: none;">
+            <div class="search-card">
+              <h2 class="search-title">Search Results</h2>
+              <div id="search-results" class="search-results">
+                <!-- JS inserts search result items here -->
+              </div>
+            </div>
+          </section>
         </div>
       </div>
     </main>
   </div>
 
+  <!-- Tag Editor Overlay (built by JS) lives at end of body -->
   <script src="app.js"></script>
 </body>
 </html>
