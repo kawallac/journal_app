@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Journal App – v0.4.3</title>
+
+  <!-- 
+    JOURNAL APP – v0.4.3
+    Frontend-only prototype:
+      - Left sidebar with search + monthly calendar
+      - Main journal editor with image + tags
+      - Search results view
+      - Calendar day-results card (for days with multiple entries)
+  -->
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- ============================================
+       App Header
+       ============================================ -->
+  <header class="app-header">
+    <div class="app-header-inner">
+      <div class="app-title-group">
+        <h1 class="app-title">Journal App</h1>
+        <div class="app-subtitle">v0.4.3 — Calendar + Search + Tags</div>
+      </div>
+      <div class="app-header-actions">
+        <button id="export-btn" class="btn-outline">Export JSON</button>
+        <span id="status-text" class="status-text"></span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============================================
+       Main Layout
+       ============================================ -->
+  <div class="app-shell">
+    <!-- ========== LEFT SIDEBAR ========== -->
+    <aside class="sidebar">
+      <!-- Sidebar: Search -->
+      <section class="sidebar-section">
+        <h2 class="sidebar-section-title">Search</h2>
+        <div class="sidebar-search">
+          <div class="sidebar-search-inner">
+            <input
+              id="search-input"
+              type="text"
+              placeholder="Search title, notes, tags…"
+              aria-label="Search journal"
+            />
+            <button
+              id="search-clear-btn"
+              type="button"
+              class="icon-button"
+              aria-label="Clear search"
+            >
+              &times;
+            </button>
+          </div>
+          <div class="sidebar-search-hint">
+            Press Enter to search
+          </div>
+        </div>
+      </section>
+
+      <!-- Sidebar: Calendar -->
+      <section class="sidebar-section sidebar-calendar">
+        <h2 class="sidebar-section-title">Calendar</h2>
+        <div class="calendar-header">
+          <button
+            id="calendar-prev-btn"
+            type="button"
+            class="icon-button"
+            aria-label="Previous month"
+          >
+            &lt;
+          </button>
+          <div id="calendar-month-label" class="calendar-month-label"></div>
+          <button
+            id="calendar-next-btn"
+            type="button"
+            class="icon-button"
+            aria-label="Next month"
+          >
+            &gt;
+          </button>
+        </div>
+        <div id="calendar-grid" class="calendar-grid"></div>
+
+      </section>
+
+      <!-- Sidebar: View toggle (back from search) -->
+      <section class="sidebar-section">
+        <button
+          id="journal-view-btn"
+          type="button"
+          class="btn-secondary full-width"
+        >
+          Back to Journal
+        </button>
+      </section>
+    </aside>
+
+    <!-- ========== MAIN CONTENT ========== -->
+    <main class="main">
+      <div class="editor-card">
+        <!-- Top toolbar: New entry / New tag -->
+        <div class="editor-toolbar">
+          <div class="editor-toolbar-left">
+            <button id="new-entry-btn" type="button" class="btn-primary">
+              New Entry
+            </button>
+            <button id="new-tag-btn" type="button" class="btn-secondary">
+              New Tag
+            </button>
+          </div>
+          <div class="editor-toolbar-right">
+            <!-- Reserved for future actions -->
+          </div>
+        </div>
+
+        <!-- ================================
+             PAGE WRAPPER (day results + search + journal)
+             ================================ -->
+        <div class="page-wrapper">
+          <!-- Day-results card (calendar multi-entry days) -->
+          <div id="day-results" class="page page-results" style="display: none;">
+            <!-- JS will render a small card here listing entries for a day -->
+          </div>
+
+          <!-- SEARCH RESULTS PAGE (stays at top when visible) -->
+          <section id="page-search" class="page page-search" style="display: none;">
+            <div class="search-card">
+              <h2 class="search-title">Search Results</h2>
+              <div id="search-results" class="search-results"></div>
+            </div>
+          </section>
+
+          <!-- Page top bar: Save/Delete/Prev/Next -->
+          <div id="page-top-bar" class="page-top-bar">
+            <div class="page-top-bar-left">
+              <button id="save-btn" type="button" class="btn-primary">
+                Save
+              </button>
+              <button id="delete-btn" type="button" class="btn-danger">
+                Delete
+              </button>
+            </div>
+            <div class="page-top-bar-right">
+              <button id="prev-btn" type="button" class="btn-ghost">
+                &larr; Prev
+              </button>
+              <button id="next-btn" type="button" class="btn-ghost">
+                Next &rarr;
+              </button>
+            </div>
+          </div>
+
+          <!-- JOURNAL PAGE (editor – appears under search when both are shown) -->
+          <section id="page-journal" class="page page-journal">
+            <div id="editor-inner" class="editor-inner"></div>
+          </section>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Tag Editor Overlay (built by JS) lives at end of body -->
+  <script src="app.js"></script>
+</body>
+</html>

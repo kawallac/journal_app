@@ -30,7 +30,10 @@ v0.4.3.2 Added tag bar and moved image storage to IndexDB
 v0.4.3.3 stopped the tag on photo auto paste
 v0.4.3.4 drag and drop from the tag bar
 v0.4.3.5 polished tag bar
-
+v0.4.4
+	-fixed tag pill showing centered on photo at new tag execution
+	-Fixed timezone issue with calendar
+	-Added method to delete tags
 # Notes
 
 
